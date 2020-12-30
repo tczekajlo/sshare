@@ -1,0 +1,25 @@
+on:
+  push:
+    tags:
+    - '*'
+
+name: Build and Push Docker image
+
+jobs:
+  build_and_push:
+    name: Build and push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build
+        env:
+          CGO_ENABLED: 0
+        run: |
+          make docker-build
+          make docker-push

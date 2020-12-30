@@ -1,0 +1,22 @@
+log-level: info
+
+client:
+  http-enable-cors: false
+  https-redirect: true
+  server-address: localhost:50041
+  tcp: false
+  tls-disabled: false
+
+server:
+  address: 0.0.0.0
+  backend-domain: sshare.io
+  backend-https-enabled: true
+  backend-ready-timeout: 2m0s
+  client-session-timeout: 0
+  driver: kubernetes
+  in-cluster: true
+  namespace: default
+  port: 50041
+  tls-ca: /etc/ssl/ca.pem
+  tls-cert: /etc/ssl/cert.pem
+  tls-key: /etc/ssl/key.pem

@@ -3,5 +3,4 @@
 sshare
 dist
 *.crt
-certs.sh
 *.srl
