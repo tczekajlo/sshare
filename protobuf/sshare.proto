@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+option go_package = ".;sshare";
+package protobuf;
+
+service Create {
+  rpc Backend (stream BackendData) returns (stream BackendReply) {}
+}
+
+service Delete {
+  rpc Backend (BackendData) returns (BackendReply) {}
+}
+
+service TLS {
+  rpc Connection (TLSRequest) returns (TLSResponse) {}
+}
+
+message TLSRequest {
+  bool send = 1;
+}
+
+message TLSResponse {
+  bytes CACert = 1;
+  int32 TLSServerPort = 2;
+}
+
+message BackendData {
+  string streamID = 1;
+  string name = 2;
+  string sshPublicKey = 3;
+  HTTPOptions HTTPOptions = 4;
+  bool onlyTCP = 5;
+  Connection connection = 6;
+}
+
+message BackendReply {
+  string error = 1;
+  bool ready = 2;
+  Connection connection = 3;
+  bool deleted = 4;
+}
+
+message HTTPOptions {
+  bool CORSEnabled = 1;
+  bool HTTPSRedirect = 2;
+
+}
+
+message Connection {
+	string SSHHost = 1;
+	int32 SSHPort = 2;
+	string Domain = 3;
+	bool HTTPScheme = 4;
+	int32 RemotePort = 5;
+	int32 LocalPort = 6;
+}

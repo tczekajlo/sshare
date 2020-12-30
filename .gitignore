@@ -1,0 +1,7 @@
+*.pem
+*.key
+sshare
+dist
+*.crt
+certs.sh
+*.srl
