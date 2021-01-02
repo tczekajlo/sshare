@@ -16,6 +16,7 @@ import (
 	"sshare/types"
 	"sshare/version"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
@@ -221,6 +222,7 @@ func tlsResponder(server *tlsServer) {
 // RunServer runs sshare server
 func RunServer() {
 	log := logger.GetInstance()
+	port := viper.GetInt32("server.port")
 
 	driverInstance := driver.Driver{}
 	driver := driverInstance.New()
@@ -239,10 +241,45 @@ func RunServer() {
 		log: log,
 	}
 
-	port := viper.GetInt32("server.port")
+	var streamInterceptors []grpc.StreamServerInterceptor = []grpc.StreamServerInterceptor{
+		grpc_prometheus.StreamServerInterceptor,
+	}
+	var unaryInterceptors []grpc.UnaryServerInterceptor = []grpc.UnaryServerInterceptor{
+		grpc_prometheus.UnaryServerInterceptor,
+	}
+
+	if viper.GetString("server.auth-token") != "" {
+		streamInterceptors = append(streamInterceptors, streamEnsureValidTokenInterceptor)
+		unaryInterceptors = append(unaryInterceptors, unaryEnsureValidTokenInterceptor)
+
+		log.Debug("authorization token is set")
+	}
+
+	var opts []grpc.ServerOption = []grpc.ServerOption{
+		grpc.StreamInterceptor(
+			grpc_middleware.ChainStreamServer(
+				streamInterceptors...,
+			),
+		),
+		grpc.UnaryInterceptor(
+			grpc_middleware.ChainUnaryServer(
+				unaryInterceptors...,
+			),
+		),
+	}
+
 	if viper.GetBool("server.tls-enabled") {
 		port = viper.GetInt32("server.tls-port")
+		creds, err := credentials.NewServerTLSFromFile(
+			viper.GetString("server.tls-cert"),
+			viper.GetString("server.tls-key"),
+		)
+		if err != nil {
+			log.Fatalf("Failed to generate credentials %v", err)
+		}
+		opts = append(opts, grpc.Creds(creds))
 	}
+
 	address := fmt.Sprintf("%s:%d", viper.GetString("server.address"), port)
 
 	log.Infow("sshare gRPC server",
@@ -268,20 +305,6 @@ func RunServer() {
 		log.Fatalw("failed to listen", "error", err)
 	}
 
-	var opts []grpc.ServerOption = []grpc.ServerOption{
-		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
-		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
-	}
-	if viper.GetBool("server.tls-enabled") {
-		creds, err := credentials.NewServerTLSFromFile(
-			viper.GetString("server.tls-cert"),
-			viper.GetString("server.tls-key"),
-		)
-		if err != nil {
-			log.Fatalf("Failed to generate credentials %v", err)
-		}
-		opts = append(opts, grpc.Creds(creds))
-	}
 	grpcServer := grpc.NewServer(opts...)
 
 	pb.RegisterCreateServer(grpcServer, createServer)

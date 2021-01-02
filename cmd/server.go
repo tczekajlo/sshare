@@ -56,6 +56,7 @@ func init() {
 	serverCmd.Flags().Int32("port", 50041, "port to listen on")
 	serverCmd.Flags().Int32("metrics-port", 2112, "port that metrics are exposed on")
 	serverCmd.Flags().Bool("in-cluster", false, "run server in Kubernetes cluster")
+	serverCmd.Flags().String("auth-token", "", "define authorization token that is required from a client")
 
 	viper.BindPFlag("kubeconfig", serverCmd.Flags().Lookup("kubeconfig"))
 	viper.BindPFlag("backend-domain", serverCmd.Flags().Lookup("backend-domain"))
@@ -73,4 +74,5 @@ func init() {
 	viper.BindPFlag("server.tls-port", serverCmd.Flags().Lookup("tls-port"))
 	viper.BindPFlag("server.in-cluster", serverCmd.Flags().Lookup("in-cluster"))
 	viper.BindPFlag("server.metrics-port", serverCmd.Flags().Lookup("metrics-port"))
+	viper.BindPFlag("server.auth-token", serverCmd.Flags().Lookup("auth-token"))
 }

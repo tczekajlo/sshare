@@ -27,10 +27,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/grpc/metadata"
 )
 
 func retryDial(tls *pb.TLSResponse) (*grpc.ClientConn, error) {
+
+	// Set up the credentials for the connection.
+	authPerRPC := oauth.NewOauthAccess(fetchToken())
 
 	retryOpts := []grpc_retry.CallOption{
 		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(100 * time.Millisecond)),
@@ -40,6 +44,10 @@ func retryDial(tls *pb.TLSResponse) (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(retryOpts...)),
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(retryOpts...)),
+	}
+
+	if viper.GetString("client.token") != "" {
+		opts = append(opts, grpc.WithPerRPCCredentials(authPerRPC))
 	}
 
 	address := viper.GetString("client.server-address")
