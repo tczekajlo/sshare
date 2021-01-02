@@ -56,6 +56,7 @@ Usage:
 
 Flags:
       --address ip                       address to listen on (default 0.0.0.0)
+      --auth-token string                define authorization token that is required from a client
       --backend-domain string            domain name that is used for public access (default "sshare.io")
       --backend-https-enabled            set true if backend supports HTTPs connection
       --backend-ready-timeout duration   time after which the backend is reported as not ready (default 2m0s)
@@ -99,6 +100,7 @@ Flags:
       --server-address string   server address (default "localhost:50041")
       --tcp                     expose TCP port (for a service that does not support HTTP protocol)
       --tls-disabled            disable TLS for connection to the server
+      --token string            authorization token
 
 Global Flags:
       --config string      config file (default is $HOME/.sshare.yaml)
