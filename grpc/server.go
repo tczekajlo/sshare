@@ -241,10 +241,10 @@ func RunServer() {
 		log: log,
 	}
 
-	var streamInterceptors []grpc.StreamServerInterceptor = []grpc.StreamServerInterceptor{
+	streamInterceptors := []grpc.StreamServerInterceptor{
 		grpc_prometheus.StreamServerInterceptor,
 	}
-	var unaryInterceptors []grpc.UnaryServerInterceptor = []grpc.UnaryServerInterceptor{
+	unaryInterceptors := []grpc.UnaryServerInterceptor{
 		grpc_prometheus.UnaryServerInterceptor,
 	}
 
@@ -255,7 +255,7 @@ func RunServer() {
 		log.Debug("authorization token is set")
 	}
 
-	var opts []grpc.ServerOption = []grpc.ServerOption{
+	opts := []grpc.ServerOption{
 		grpc.StreamInterceptor(
 			grpc_middleware.ChainStreamServer(
 				streamInterceptors...,

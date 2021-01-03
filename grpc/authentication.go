@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"sshare/metrics"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -40,9 +41,13 @@ func unaryEnsureValidTokenInterceptor(ctx context.Context, req interface{}, info
 	// The keys within metadata.MD are normalized to lowercase.
 	// See: https://godoc.org/google.golang.org/grpc/metadata#New
 	if !validToken(md["authorization"]) {
+		metrics.AuthenticationTotal.WithLabelValues("invalid_token", "unary").Inc()
+
 		return nil, errInvalidToken
 	}
 	// Continue execution of handler after ensuring a valid token.
+	metrics.AuthenticationTotal.WithLabelValues("success", "unary").Inc()
+
 	return handler(ctx, req)
 }
 
@@ -53,8 +58,12 @@ func streamEnsureValidTokenInterceptor(srv interface{}, ss grpc.ServerStream, in
 		return errMissingMetadata
 	}
 	if !validToken(md["authorization"]) {
+		metrics.AuthenticationTotal.WithLabelValues("invalid_token", "stream").Inc()
+
 		return errInvalidToken
 	}
+
+	metrics.AuthenticationTotal.WithLabelValues("success", "stream").Inc()
 
 	return handler(srv, ss)
 }
