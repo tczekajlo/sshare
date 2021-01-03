@@ -50,7 +50,7 @@ func (s *tlsServer) Connection(ctx context.Context, data *pb.TLSRequest) (*pb.TL
 	// Read metadata from client.
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		s.log.Errorw("failed to get metadata")
+		s.log.Errorw("Failed to get metadata")
 	}
 	streamID := md.Get("stream-id")[0]
 
@@ -59,8 +59,8 @@ func (s *tlsServer) Connection(ctx context.Context, data *pb.TLSRequest) (*pb.TL
 		response.TLSServerPort = viper.GetInt32("server.tls-port")
 		response.CACert = s.CACert
 
-		s.log.Infow("received data", "data", data, "stream-id", streamID)
-		s.log.Infow("sent data", "data", response, "stream-id", streamID)
+		s.log.Infow("Received data", "data", data, "stream-id", streamID)
+		s.log.Infow("Sent data", "data", response, "stream-id", streamID)
 
 		return response, nil
 	}
@@ -71,18 +71,18 @@ func (s *deleteServer) Backend(ctx context.Context, data *pb.BackendData) (*pb.B
 	// Read metadata from client.
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		s.log.Errorw("failed to get metadata")
+		s.log.Errorw("Failed to get metadata")
 	}
 	streamID := md.Get("stream-id")[0]
 
 	if err := s.driver.Delete(data); err != nil {
-		s.log.Errorw("cannot delete the backend",
+		s.log.Errorw("Cannot delete the backend",
 			"name", data.Name,
 			"stream-id", streamID,
 		)
 		return &pb.BackendReply{Deleted: false}, nil
 	}
-	s.log.Infow("the backed has been deleted",
+	s.log.Infow("The backed has been deleted",
 		"name", data.Name,
 		"stream-id", streamID,
 	)
@@ -101,8 +101,8 @@ func (s *createServer) Backend(stream pb.Create_BackendServer) error {
 	// Read metadata from client.
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		s.log.Errorw("failed to get metadata")
-		return status.Errorf(codes.DataLoss, "failed to get metadata")
+		s.log.Errorw("Failed to get metadata")
+		return status.Errorf(codes.DataLoss, "Failed to get metadata")
 	}
 
 	// Create and send header.
@@ -115,30 +115,30 @@ func (s *createServer) Backend(stream pb.Create_BackendServer) error {
 		req, err := stream.Recv()
 		if err == io.EOF {
 			// return will close stream from server side
-			s.log.Infow("exit (close stream from server side)", "stream-id", streamID)
+			s.log.Infow("Exit (close stream from server side)", "stream-id", streamID)
 			return nil
 		}
 		if err != nil {
-			s.log.Errorw("receive error", "error", err, "stream-id", streamID)
-			return status.Errorf(codes.DataLoss, "failed to prepare a tunnel (stream-id: %s)", streamID)
+			s.log.Errorw("Receive error", "error", err, "stream-id", streamID)
+			return status.Errorf(codes.DataLoss, "Failed to prepare a tunnel (stream-id: %s)", streamID)
 		}
-		s.log.Debugw("received data", "data", req)
+		s.log.Debugw("Received data", "data", req)
 
 		// Prepare backend
 		if err := s.driver.Create(req); err != nil {
 			if errDel := s.driver.Delete(req); errDel != nil {
-				s.log.Errorw("cannot delete backend",
+				s.log.Errorw("Cannot delete backend",
 					"name", req.Name,
 					"stream-id", streamID,
 					"error", errDel,
 				)
 			} else {
-				s.log.Infow("the backend has been deleted",
+				s.log.Infow("The backend has been deleted",
 					"name", req.Name,
 					"stream-id", streamID,
 				)
 			}
-			return status.Errorf(codes.Internal, "failed to prepare a tunnel, cannot create a backend (stream-id: %s)", streamID)
+			return status.Errorf(codes.Internal, "Failed to prepare a tunnel, cannot create a backend (stream-id: %s)", streamID)
 		}
 
 		// Check if backend is ready
@@ -146,24 +146,24 @@ func (s *createServer) Backend(stream pb.Create_BackendServer) error {
 		if err != nil {
 			s.log.Errorw("the backend is not ready", "error", err)
 			if errDel := s.driver.Delete(req); errDel != nil {
-				s.log.Errorw("cannot delete backend",
+				s.log.Errorw("Cannot delete backend",
 					"name", req.Name,
 					"stream-id", streamID,
 					"error", errDel,
 				)
 			} else {
-				s.log.Infow("the backend has been deleted",
+				s.log.Infow("The backend has been deleted",
 					"name", req.Name,
 					"stream-id", streamID,
 				)
 			}
-			return status.Errorf(codes.Internal, "failed to prepare a tunnel, the backend is not ready (stream-id: %s)", streamID)
+			return status.Errorf(codes.Internal, "Failed to prepare a tunnel, the backend is not ready (stream-id: %s)", streamID)
 		}
 
 		connData, err := s.driver.GetConnectionData(req)
 		if err != nil {
-			s.log.Errorw("cannot get connection data", "error", err)
-			return status.Errorf(codes.Internal, "failed to prepare a tunnel, couldn't get connection data (stream-id: %s)", streamID)
+			s.log.Errorw("Cannot get connection data", "error", err)
+			return status.Errorf(codes.Internal, "Failed to prepare a tunnel, couldn't get connection data (stream-id: %s)", streamID)
 		}
 
 		connData.RemotePort = req.Connection.LocalPort
@@ -173,10 +173,10 @@ func (s *createServer) Backend(stream pb.Create_BackendServer) error {
 			ClientSessionTimeout: viper.GetInt32("server.client-session-timeout"),
 		}
 		if err := stream.Send(&resp); err != nil {
-			s.log.Errorw("send error", "error", err, "stream-id", streamID)
+			s.log.Errorw("Send error", "error", err, "stream-id", streamID)
 		}
 
-		s.log.Infow("sent reply",
+		s.log.Infow("Sent reply",
 			"stream-id", streamID,
 			"ready", resp.Ready,
 			"name", req.Name,
@@ -194,14 +194,14 @@ func tlsResponder(server *tlsServer) {
 		// read CA certs
 		caData, err := ioutil.ReadFile(viper.GetString("server.tls-ca"))
 		if err != nil {
-			server.log.Fatalf("cannot read CA certificate %v", err)
+			server.log.Fatalf("Cannot read CA certificate %v", err)
 		}
 		server.CACert = caData
 
 		address := fmt.Sprintf("%s:%d", viper.GetString("server.address"), viper.GetInt32("server.port"))
 		lis, err := net.Listen("tcp", address)
 		if err != nil {
-			server.log.Fatalw("failed to listen", "error", err)
+			server.log.Fatalw("Failed to listen", "error", err)
 		}
 
 		server.log.Infow("TLS Responder",
@@ -212,7 +212,7 @@ func tlsResponder(server *tlsServer) {
 		pb.RegisterTLSServer(grpcServer, server)
 
 		if err := grpcServer.Serve(lis); err != nil {
-			server.log.Fatalw("failed to serve", "error", err)
+			server.log.Fatalw("Failed to serve", "error", err)
 		}
 	} else {
 		server.log.Infow("TLS is disabled. Skipping TLS Responder")
@@ -252,7 +252,7 @@ func RunServer() {
 		streamInterceptors = append(streamInterceptors, streamEnsureValidTokenInterceptor)
 		unaryInterceptors = append(unaryInterceptors, unaryEnsureValidTokenInterceptor)
 
-		log.Debug("authorization token is set")
+		log.Debug("Authorization token is set")
 	}
 
 	opts := []grpc.ServerOption{
@@ -302,7 +302,7 @@ func RunServer() {
 
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
-		log.Fatalw("failed to listen", "error", err)
+		log.Fatalw("Failed to listen", "error", err)
 	}
 
 	grpcServer := grpc.NewServer(opts...)
@@ -311,7 +311,7 @@ func RunServer() {
 	pb.RegisterDeleteServer(grpcServer, deleteServer)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalw("failed to serve", "error", err)
+		log.Fatalw("Failed to serve", "error", err)
 	}
 
 }

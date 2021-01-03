@@ -29,7 +29,7 @@ func (p *Proxy) Run(listener net.Listener) {
 			if err == nil {
 				go p.forward(connection)
 			} else {
-				p.Log.Errorw("error accepting connection", "error", err)
+				p.Log.Errorw("Error accepting connection", "error", err)
 			}
 		}
 	}
@@ -62,7 +62,7 @@ func (p *Proxy) copy(from, to net.Conn, wg *sync.WaitGroup) {
 		return
 	default:
 		if _, err := io.Copy(to, from); err != nil {
-			p.Log.Errorf("cannot copy connection: %v", err)
+			p.Log.Errorf("Cannot copy connection: %v", err)
 			p.Stop()
 			return
 		}
@@ -71,7 +71,7 @@ func (p *Proxy) copy(from, to net.Conn, wg *sync.WaitGroup) {
 
 // Stop stops proxy
 func (p *Proxy) Stop() {
-	p.Log.Debug("stopping proxy")
+	p.Log.Debug("Stopping proxy")
 	if p.Done == nil {
 		return
 	}

@@ -56,7 +56,7 @@ func retryDial(tls *pb.TLSResponse) (*grpc.ClientConn, error) {
 		certPool := x509.NewCertPool()
 		// Append the client certificates from the CA
 		if ok := certPool.AppendCertsFromPEM(tls.CACert); !ok {
-			log.Fatal("failed to append client certs")
+			log.Fatal("Failed to append client certs")
 		}
 
 		creds := credentials.NewClientTLSFromCert(certPool, "")
@@ -99,7 +99,7 @@ func (s *SshareClient) generateSSHKeys() {
 
 	sshPublicKey, err := s.sshKeys.GetPublicKey()
 	if err != nil {
-		s.log.Fatalw("cannot get SSH public key", "error", err)
+		s.log.Fatalw("Cannot get SSH public key", "error", err)
 	}
 	s.sshPublicKey = sshPublicKey
 
@@ -124,7 +124,7 @@ func (s *SshareClient) initStreamClient(client pb.CreateClient) {
 	// Make RPC using the context with the metadata
 	stream, err := client.Backend(ctx)
 	if err != nil {
-		log.Fatalf("open stream error %v", err)
+		log.Fatalf("Open stream error: %v", err)
 	}
 
 	s.streamClient = stream
@@ -146,9 +146,9 @@ func (s *SshareClient) runSender() {
 	}
 
 	if err := s.streamClient.Send(&req); err != nil {
-		log.Fatalf("can not send %v", err)
+		log.Fatalf("Can not send: %v", err)
 	}
-	s.log.Debugw("sent data", "name", req.Name, "stream-id", req.StreamID)
+	s.log.Debugw("Sent data", "name", req.Name, "stream-id", req.StreamID)
 	s.streamClient.CloseSend()
 }
 
@@ -156,7 +156,7 @@ func (s *SshareClient) runReceiver() {
 	// Read the header when the header arrives.
 	header, err := s.streamClient.Header()
 	if err != nil {
-		log.Fatalf("failed to get header from stream: %v", err)
+		log.Fatalf("Failed to get header from stream: %v", err)
 	}
 
 	s.log.Debugw("Received metadata", "header", header)
@@ -168,7 +168,7 @@ func (s *SshareClient) runReceiver() {
 			return
 		}
 		if err != nil {
-			log.Fatalf("Can not receive %v", err)
+			log.Fatalf("Can not receive: %v", err)
 		}
 		s.log.Debugw("Received data",
 			"connection", resp.Connection,
@@ -188,7 +188,7 @@ func (s *SshareClient) runReceiver() {
 
 func (s *SshareClient) sessionTimeoutClose(sigs chan os.Signal) {
 	if s.sessionTimeout != 0 {
-		s.log.Debugw("session timeout is set", "timeout", s.sessionTimeout)
+		s.log.Debugw("Session timeout is set", "timeout", s.sessionTimeout)
 		time.Sleep(time.Duration(s.sessionTimeout) * time.Second)
 		fmt.Println(color.YellowString(emoji.Sprintf("Session timed out :clock: The server that you're connected to allows for a session no longer than %v",
 			time.Duration(s.sessionTimeout)*time.Second)))
@@ -204,11 +204,11 @@ func handleSignals(sigs chan os.Signal, sshareClient *SshareClient) {
 func clean(sshareClient *SshareClient) {
 	conn, err := retryDial(sshareClient.TLS)
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Fatalf("Did not connect: %v", err)
 	}
 	defer func() {
 		if e := conn.Close(); e != nil {
-			log.Printf("failed to close connection: %s", e)
+			log.Printf("Failed to close connection: %s", e)
 		}
 	}()
 	// Make a greeter client and send an RPC.
@@ -248,7 +248,7 @@ func tlsRequester(streamID string) *pb.TLSResponse {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(viper.GetString("client.server-address"), grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Fatalf("Did not connect: %v", err)
 	}
 	defer conn.Close()
 	c := pb.NewTLSClient(conn)
@@ -263,9 +263,9 @@ func tlsRequester(streamID string) *pb.TLSResponse {
 	ctxMetadata := metadata.NewOutgoingContext(ctx, md)
 	r, err := c.Connection(ctxMetadata, &pb.TLSRequest{Send: true}, grpc.WaitForReady(true))
 	if err != nil {
-		log.Fatalf("could not get data for TLS connection: %v", err)
+		log.Fatalf("Could not get data for TLS connection: %v", err)
 	}
-	log.Debugw("received data from TLS Responder", "data", r)
+	log.Debugw("Received data from TLS Responder", "data", r)
 
 	return r
 }
@@ -359,7 +359,7 @@ func RunClient(localPort int32) {
 	}
 	defer func() {
 		if e := conn.Close(); e != nil {
-			log.Printf("failed to close connection: %s", e)
+			log.Printf("Failed to close connection: %s", e)
 		}
 	}()
 
@@ -395,7 +395,7 @@ func RunClient(localPort int32) {
 	}()
 
 	if err := tunnel.ReverseTunnel(); err != nil {
-		sshareClient.log.Errorw("cannot establish the tunnel", "error", err)
+		sshareClient.log.Errorw("Cannot establish the tunnel", "error", err)
 		clean(sshareClient)
 	}
 
