@@ -18,7 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"sshare/grpc"
+	"sshare/pkg/grpc"
 	"strconv"
 
 	"github.com/spf13/cobra"

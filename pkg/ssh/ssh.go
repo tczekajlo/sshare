@@ -8,7 +8,7 @@ import (
 
 	pb "sshare/protobuf"
 
-	"sshare/proxy"
+	"sshare/pkg/proxy"
 
 	"github.com/briandowns/spinner"
 	"github.com/kyokomi/emoji"

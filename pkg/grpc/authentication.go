@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-	"sshare/metrics"
+	"sshare/pkg/metrics"
 	"strings"
 
 	"github.com/spf13/viper"

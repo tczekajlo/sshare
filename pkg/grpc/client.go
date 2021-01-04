@@ -12,10 +12,10 @@ import (
 	"syscall"
 	"time"
 
-	"sshare/logger"
+	"sshare/pkg/logger"
+	"sshare/pkg/ssh"
+	"sshare/pkg/version"
 	pb "sshare/protobuf"
-	"sshare/ssh"
-	"sshare/version"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"

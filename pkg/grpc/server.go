@@ -11,10 +11,10 @@ import (
 
 	pb "sshare/protobuf"
 
-	"sshare/driver"
-	"sshare/logger"
-	"sshare/types"
-	"sshare/version"
+	"sshare/pkg/driver"
+	"sshare/pkg/logger"
+	"sshare/pkg/types"
+	"sshare/pkg/version"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"

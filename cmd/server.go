@@ -18,7 +18,7 @@ package cmd
 import (
 	"net"
 	"path/filepath"
-	"sshare/grpc"
+	"sshare/pkg/grpc"
 	"time"
 
 	"github.com/spf13/cobra"
