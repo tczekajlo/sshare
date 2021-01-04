@@ -13,7 +13,7 @@ Address: http://ca3150dd-6fca-41e6-8896-8b20a87bd925.my.domain -> https://ca3150
 
 ## Requirements
 
-- a Kubernetes cluster >= v1.8 with nginx-ingress
+- Kubernetes cluster >= v1.8 with nginx-ingress
 
 ## How does is work?
 
@@ -113,14 +113,15 @@ Global Flags:
 
 In the following example we run `sshare server` and expose a nginx container by using `sshare client`.
 
-The example assumes that you have access to a Kubernetes cluster with configured nginx-ingress. The `sshare server` uses default kubernetes configuration available on your local machine.
+The example assumes that you have access to a Kubernetes cluster with configured nginx-ingress. The `sshare server` uses a default Kubernetes configuration available on your local machine.
 
 1. Run `sshare server`
 
 ```
 $ sshare server
-{"level":"info","ts":1609336286.353205,"caller":"grpc/server.go:243","msg":"Sshare gRPC server","version":"12abf2e","address":"0.0.0.0:50041"}
+{"level":"info","ts":1609336286.353205,"caller":"grpc/server.go:243","msg":"sshare gRPC server","version":"1.0.0","address":"0.0.0.0:50041"}
 {"level":"info","ts":1609336286.353504,"caller":"grpc/server.go:212","msg":"TLS is disabled. Skipping TLS Responder"}
+{"level":"info","ts":1609336286.353702,"caller":"grpc/server.go:295","msg":"Running Prometheus metrics","address":":2112","endpoint":"/metrics"}
 ```
 
 2. Run a nginx container locally
@@ -133,7 +134,7 @@ $ docker run --rm -p 8080:80 nginx
 
 ```
 $ sshare client 8080 --tls-disabled
-sshare 12abf2e 🚀
+sshare 1.0.0 🚀
 
 Address: http://74ba1e74-01d4-4b60-be9a-46992e392ee9.sshare.io -> 0.0.0.0:8080
 
@@ -141,12 +142,12 @@ Address: http://74ba1e74-01d4-4b60-be9a-46992e392ee9.sshare.io -> 0.0.0.0:8080
 
 ### Connect to a sshare server runs on a Kubernetes cluster
 
-1. [Here](examples/kubernetes) you can find example on how to setup `sshare server` on a Kubernetes cluster
-2. If `sshare server` is ready we can connect to the server from a local machine
+1. [Here](examples/kubernetes) you can find an example of how to setup `sshare server` on a Kubernetes cluster
+2. If `sshare server` is ready you can connect to the server from a local machine
 
 ```
 sshare client 8080 --server-address server.sshare.mydomain.com:50041
-sshare 188ac7a 🚀
+sshare 1.0.0 🚀
 
 Address: https://d22336c3-740a-478d-bdf9-d438d197c957.sshare.mydomain.com -> 0.0.0.0:8080
 Address: http://d22336c3-740a-478d-bdf9-d438d197c957.sshare.mydomain.com -> 0.0.0.0:8080
