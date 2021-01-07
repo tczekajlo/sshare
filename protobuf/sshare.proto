@@ -23,6 +23,9 @@ message TLSRequest {
 message TLSResponse {
   bytes CACert = 1;
   int32 TLSServerPort = 2;
+  bool authEnabled = 3;
+  string authURL = 4;
+  string authState = 5;
 }
 
 message BackendData {

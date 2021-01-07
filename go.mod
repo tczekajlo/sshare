@@ -13,6 +13,7 @@ require (
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/pkg/browser v0.0.0-20201207095918-0426ae3fba23
 	github.com/prometheus/client_golang v0.9.3
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.1

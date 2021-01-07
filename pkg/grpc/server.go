@@ -13,6 +13,7 @@ import (
 
 	"sshare/pkg/driver"
 	"sshare/pkg/logger"
+	"sshare/pkg/oauth2"
 	"sshare/pkg/types"
 	"sshare/pkg/version"
 
@@ -44,6 +45,7 @@ type tlsServer struct {
 	log    *zap.SugaredLogger
 	CACert []byte
 	pb.UnimplementedTLSServer
+	oauth2 oauth2.Provider
 }
 
 func (s *tlsServer) Connection(ctx context.Context, data *pb.TLSRequest) (*pb.TLSResponse, error) {
@@ -58,6 +60,11 @@ func (s *tlsServer) Connection(ctx context.Context, data *pb.TLSRequest) (*pb.TL
 	if data.Send {
 		response.TLSServerPort = viper.GetInt32("server.tls-port")
 		response.CACert = s.CACert
+		response.AuthEnabled = viper.GetBool("server.auth-enabled")
+
+		if viper.GetBool("server.auth-enabled") {
+			response.AuthURL = s.oauth2.GetAuthURL()
+		}
 
 		s.log.Infow("Received data", "data", data, "stream-id", streamID)
 		s.log.Infow("Sent data", "data", response, "stream-id", streamID)
@@ -285,6 +292,17 @@ func RunServer() {
 	log.Infow("sshare gRPC server",
 		"version", version.VERSION,
 		"address", address)
+
+	// check if TLS is enabled
+	if !viper.GetBool("server.tls-enabled") && viper.GetBool("server.auth-enabled") {
+		log.Error("Authentication can't be enabled without TLS")
+	} else if viper.GetBool("server.auth-enabled") {
+
+		tlsServer.oauth2 = oauth2.New()
+		go tlsServer.oauth2.ServerCallbackEndpoint()
+
+		log.Info("OAuth2 enabled")
+	}
 
 	go tlsResponder(tlsServer)
 

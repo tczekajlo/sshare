@@ -2,9 +2,14 @@ package grpc
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"os"
 	"sshare/pkg/metrics"
 	"strings"
+	"time"
 
+	"github.com/pkg/browser"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -14,9 +19,41 @@ import (
 )
 
 var (
-	errMissingMetadata = status.Errorf(codes.InvalidArgument, "missing metadata")
-	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
+	errMissingMetadata           = status.Errorf(codes.InvalidArgument, "missing metadata")
+	errInvalidToken              = status.Errorf(codes.Unauthenticated, "invalid token")
+	callbackDone       chan bool = make(chan bool)
 )
+
+func (s *SshareClient) handleCallback(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("#%v", r)
+	//content, _ := getUserInfo(, r.FormValue("code"))
+
+	if s.TLS.AuthState != r.FormValue("state") {
+		s.log.Error("Invalid oauth state")
+		os.Exit(1)
+	}
+
+	fmt.Fprintf(w, "Success, please go back to the terminal\n")
+	close(callbackDone)
+	return
+}
+
+func (s *SshareClient) oauth2Auth() {
+	if s.TLS.AuthEnabled {
+		//ctx := context.Background()
+
+		//http.HandleFunc("/callback", s.handleCallback)
+		//server := &http.Server{Addr: ":8080"}
+		//go server.ListenAndServe()
+
+		fmt.Println("Server requires authentication, please use the following link:", s.TLS.AuthURL)
+		browser.OpenURL(s.TLS.AuthURL)
+		time.Sleep(1000 * time.Second)
+		//<-callbackDone
+		//server.Shutdown(ctx)
+	}
+
+}
 
 func fetchToken() *oauth2.Token {
 	return &oauth2.Token{

@@ -56,7 +56,12 @@ func init() {
 	serverCmd.Flags().Int32("port", 50041, "port to listen on")
 	serverCmd.Flags().Int32("metrics-port", 2112, "port that metrics are exposed on")
 	serverCmd.Flags().Bool("in-cluster", false, "run server in Kubernetes cluster")
-	serverCmd.Flags().String("auth-token", "", "define authorization token that is required from a client")
+	serverCmd.Flags().Bool("auth-enabled", false, "enabled authentication")
+	serverCmd.Flags().String("oauth2-provider", "github", "OAuth 2 provider name (available: github)")
+	serverCmd.Flags().StringSlice("oauth2-github-user", nil, "allow logins by username, separated by a comma")
+	serverCmd.Flags().StringSlice("oauth2-email", nil, "allow logins for users with a given email, separated by a comma")
+	serverCmd.Flags().String("oauth2-client-id", "", "the OAuth Client ID")
+	serverCmd.Flags().String("oauth2-client-secret", "", "the OAuth Client Secret")
 
 	viper.BindPFlag("kubeconfig", serverCmd.Flags().Lookup("kubeconfig"))
 	viper.BindPFlag("backend-domain", serverCmd.Flags().Lookup("backend-domain"))
@@ -74,5 +79,6 @@ func init() {
 	viper.BindPFlag("server.tls-port", serverCmd.Flags().Lookup("tls-port"))
 	viper.BindPFlag("server.in-cluster", serverCmd.Flags().Lookup("in-cluster"))
 	viper.BindPFlag("server.metrics-port", serverCmd.Flags().Lookup("metrics-port"))
-	viper.BindPFlag("server.auth-token", serverCmd.Flags().Lookup("auth-token"))
+	viper.BindPFlag("server.auth-enabled", serverCmd.Flags().Lookup("auth-enabled"))
+	viper.BindPFlag("server.oauth2-provider", serverCmd.Flags().Lookup("oauth2-provider"))
 }

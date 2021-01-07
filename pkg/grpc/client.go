@@ -348,6 +348,9 @@ func RunClient(localPort int32) {
 	if !viper.GetBool("client.tls-disabled") {
 		sshareClient.spinnerNewMsg(" Requesting CA cert for securing connection...")
 		sshareClient.TLS = tlsRequester(sshareClient.streamID)
+
+		sshareClient.spinnerNewMsg(" Waiting for the authentication to be finished...")
+		sshareClient.oauth2Auth()
 	}
 
 	sshareClient.spinnerNewMsg(" Preparing a secure tunnel...")
@@ -387,11 +390,13 @@ func RunClient(localPort int32) {
 		<-tunnel.Ready
 		fmt.Println()
 		sshareClient.printAccessData()
+		return
 	}()
 
 	go func() {
 		<-tunnel.Ready
 		sshareClient.sessionTimeoutClose(sigs)
+		return
 	}()
 
 	if err := tunnel.ReverseTunnel(); err != nil {
