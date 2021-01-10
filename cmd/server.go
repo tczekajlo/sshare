@@ -18,7 +18,7 @@ package cmd
 import (
 	"net"
 	"path/filepath"
-	"sshare/grpc"
+	"sshare/pkg/grpc"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -33,6 +33,9 @@ var serverCmd = &cobra.Command{
 	Short: "Runs server that creates a backend for client request",
 	Long:  `Runs server that creates a backend for client request.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if viper.GetBool("server.auth-enabled") && (viper.GetString("server.oauth2-client-id") == "" || viper.GetString("server.oauth2-client-secret") == "") {
+			panic("Authentication is enabled but OAuth2 Client ID or Client Secret is missing")
+		}
 		grpc.RunServer()
 	},
 }
@@ -56,7 +59,13 @@ func init() {
 	serverCmd.Flags().Int32("port", 50041, "port to listen on")
 	serverCmd.Flags().Int32("metrics-port", 2112, "port that metrics are exposed on")
 	serverCmd.Flags().Bool("in-cluster", false, "run server in Kubernetes cluster")
-	serverCmd.Flags().String("auth-token", "", "define authorization token that is required from a client")
+	serverCmd.Flags().Bool("auth-enabled", false, "enabled authentication")
+	serverCmd.Flags().String("oauth2-provider", "github", "OAuth 2 provider name (available: github)")
+	serverCmd.Flags().StringSlice("oauth2-github-user", nil, "allow logins by username, separated by a comma")
+	serverCmd.Flags().StringSlice("oauth2-email", nil, "allow logins for users with a given email, separated by a comma")
+	serverCmd.Flags().String("oauth2-client-id", "", "the OAuth Client ID")
+	serverCmd.Flags().String("oauth2-client-secret", "", "the OAuth Client Secret")
+	serverCmd.Flags().Int32("oauth2-port", 50039, "port to listen on for OAuth2")
 
 	viper.BindPFlag("kubeconfig", serverCmd.Flags().Lookup("kubeconfig"))
 	viper.BindPFlag("backend-domain", serverCmd.Flags().Lookup("backend-domain"))
@@ -74,5 +83,11 @@ func init() {
 	viper.BindPFlag("server.tls-port", serverCmd.Flags().Lookup("tls-port"))
 	viper.BindPFlag("server.in-cluster", serverCmd.Flags().Lookup("in-cluster"))
 	viper.BindPFlag("server.metrics-port", serverCmd.Flags().Lookup("metrics-port"))
-	viper.BindPFlag("server.auth-token", serverCmd.Flags().Lookup("auth-token"))
+	viper.BindPFlag("server.auth-enabled", serverCmd.Flags().Lookup("auth-enabled"))
+	viper.BindPFlag("server.oauth2-provider", serverCmd.Flags().Lookup("oauth2-provider"))
+	viper.BindPFlag("server.oauth2-port", serverCmd.Flags().Lookup("oauth2-port"))
+	viper.BindPFlag("server.oauth2-email", serverCmd.Flags().Lookup("oauth2-email"))
+	viper.BindPFlag("server.oauth2-github-user", serverCmd.Flags().Lookup("oauth2-github-user"))
+	viper.BindPFlag("server.oauth2-client-id", serverCmd.Flags().Lookup("oauth2-client-id"))
+	viper.BindPFlag("server.oauth2-client-secret", serverCmd.Flags().Lookup("oauth2-client-secret"))
 }

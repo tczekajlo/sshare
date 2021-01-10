@@ -1,8 +1,8 @@
 package driver
 
 import (
-	"sshare/driver/k8s"
-	"sshare/types"
+	"sshare/pkg/driver/k8s"
+	"sshare/pkg/types"
 
 	"github.com/spf13/viper"
 )

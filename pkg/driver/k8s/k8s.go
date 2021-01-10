@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"sshare/logger"
-	"sshare/metrics"
+	"sshare/pkg/logger"
+	"sshare/pkg/metrics"
 
 	pb "sshare/protobuf"
 

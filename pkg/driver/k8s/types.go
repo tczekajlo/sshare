@@ -1,8 +1,8 @@
 package k8s
 
 import (
-	"sshare/logger"
-	"sshare/types"
+	"sshare/pkg/logger"
+	"sshare/pkg/types"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

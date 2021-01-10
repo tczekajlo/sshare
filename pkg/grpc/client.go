@@ -9,13 +9,14 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
-	"sshare/logger"
+	"sshare/pkg/logger"
+	"sshare/pkg/ssh"
+	"sshare/pkg/version"
 	pb "sshare/protobuf"
-	"sshare/ssh"
-	"sshare/version"
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
@@ -24,6 +25,7 @@ import (
 	"github.com/kyokomi/emoji"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -31,10 +33,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func retryDial(tls *pb.TLSResponse) (*grpc.ClientConn, error) {
-
-	// Set up the credentials for the connection.
-	authPerRPC := oauth.NewOauthAccess(fetchToken())
+func retryDial(sshareClient *SshareClient, address string) (*grpc.ClientConn, error) {
+	host, port, err := net.SplitHostPort(address)
+	if err != nil {
+		log.Fatalf("Failed to parse address %v", err)
+	}
 
 	retryOpts := []grpc_retry.CallOption{
 		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(100 * time.Millisecond)),
@@ -46,28 +49,27 @@ func retryDial(tls *pb.TLSResponse) (*grpc.ClientConn, error) {
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(retryOpts...)),
 	}
 
-	if viper.GetString("client.token") != "" {
+	if sshareClient.TLS.AuthEnabled && sshareClient.oauth2Token != nil {
+		// Set up the credentials for the connection.
+		sshareClient.log.Debug("Set up the credentials for the connection")
+		authPerRPC := oauth.NewOauthAccess(sshareClient.oauth2Token)
 		opts = append(opts, grpc.WithPerRPCCredentials(authPerRPC))
 	}
 
-	address := viper.GetString("client.server-address")
 	if !viper.GetBool("client.tls-disabled") {
 		// Create a certificate pool from the certificate authority
 		certPool := x509.NewCertPool()
 		// Append the client certificates from the CA
-		if ok := certPool.AppendCertsFromPEM(tls.CACert); !ok {
+		if ok := certPool.AppendCertsFromPEM(sshareClient.TLS.CACert); !ok {
 			log.Fatal("Failed to append client certs")
 		}
 
 		creds := credentials.NewClientTLSFromCert(certPool, "")
 		opts = append(opts, grpc.WithTransportCredentials(creds))
 
-		host, _, err := net.SplitHostPort(address)
-		if err != nil {
-			log.Fatalf("Failed to parse address %v", err)
+		if port != strconv.Itoa(int(sshareClient.TLS.OAuth2ServerPort)) {
+			address = fmt.Sprintf("%s:%d", host, sshareClient.TLS.TLSServerPort)
 		}
-
-		address = fmt.Sprintf("%s:%d", host, tls.TLSServerPort)
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
@@ -89,6 +91,8 @@ type SshareClient struct {
 	localPort         int32
 	onlyTCP           bool
 	sessionTimeout    int32
+	oauth2Code        string
+	oauth2Token       *oauth2.Token
 }
 
 func (s *SshareClient) generateSSHKeys() {
@@ -202,7 +206,7 @@ func handleSignals(sigs chan os.Signal, sshareClient *SshareClient) {
 }
 
 func clean(sshareClient *SshareClient) {
-	conn, err := retryDial(sshareClient.TLS)
+	conn, err := retryDial(sshareClient, viper.GetString("client.server-address"))
 	if err != nil {
 		log.Fatalf("Did not connect: %v", err)
 	}
@@ -271,6 +275,11 @@ func tlsRequester(streamID string) *pb.TLSResponse {
 }
 
 func (s *SshareClient) checkLocalListener() {
+	if s.localPort == 64000 {
+		fmt.Printf("%s\n", color.RedString("Port 64000 is reserved for OAuth authentication, please use different port"))
+		os.Exit(1)
+	}
+
 	local, err := net.Dial("tcp", fmt.Sprintf("0.0.0.0:%d", s.localPort))
 	if err != nil {
 		fmt.Printf("%v: %s\n", color.RedString("Cannot dial into local service"), err)
@@ -335,6 +344,7 @@ func RunClient(localPort int32) {
 		sshKeys:      &ssh.Keys{},
 		localPort:    localPort,
 		onlyTCP:      viper.GetBool("client.tcp"),
+		TLS:          &pb.TLSResponse{},
 	}
 
 	emoji.Println(fmt.Sprintf("sshare %s :rocket:", version.VERSION))
@@ -348,12 +358,19 @@ func RunClient(localPort int32) {
 	if !viper.GetBool("client.tls-disabled") {
 		sshareClient.spinnerNewMsg(" Requesting CA cert for securing connection...")
 		sshareClient.TLS = tlsRequester(sshareClient.streamID)
+
+		sshareClient.spinnerNewMsg(" Waiting for the authentication to be finished...")
+		if err := sshareClient.oauth2Auth(); err != nil {
+			sshareClient.waitSpinner.Stop()
+			log.Fatalf("Cannot finish authentication: %v", err)
+			os.Exit(1)
+		}
 	}
 
 	sshareClient.spinnerNewMsg(" Preparing a secure tunnel...")
 
 	// Set up a connection to the server.
-	conn, err := retryDial(sshareClient.TLS)
+	conn, err := retryDial(sshareClient, viper.GetString("client.server-address"))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -387,11 +404,13 @@ func RunClient(localPort int32) {
 		<-tunnel.Ready
 		fmt.Println()
 		sshareClient.printAccessData()
+		return
 	}()
 
 	go func() {
 		<-tunnel.Ready
 		sshareClient.sessionTimeoutClose(sigs)
+		return
 	}()
 
 	if err := tunnel.ReverseTunnel(); err != nil {

@@ -12,7 +12,7 @@ PATH := $(CURRENTDIR)/bin:$(PATH)
 
 VERSION?=$(shell git describe --tags --always)
 
-LD_FLAGS = -ldflags "-X 'sshare/version.VERSION=$(VERSION)' -s -w"
+LD_FLAGS = -ldflags "-X 'sshare/pkg/version.VERSION=$(VERSION)' -s -w"
 
 .PHONY: clean build docker-build docker-push
 

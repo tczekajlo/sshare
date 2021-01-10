@@ -18,7 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"sshare/version"
+	"sshare/pkg/version"
 
 	"github.com/spf13/cobra"
 

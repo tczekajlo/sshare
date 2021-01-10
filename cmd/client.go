@@ -18,7 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"sshare/grpc"
+	"sshare/pkg/grpc"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -55,7 +55,7 @@ func init() {
 
 	// Here you can define flags and configuration settings.
 	clientCmd.Flags().String("server-address", "localhost:50041", "server address")
-	clientCmd.Flags().String("token", "", "authorization token")
+	clientCmd.Flags().Bool("login", false, "log in")
 	clientCmd.Flags().Bool("http-enable-cors", false, "enable CORS")
 	clientCmd.Flags().Bool("https-redirect", false, "redirect HTTP to HTTPS")
 	clientCmd.Flags().Bool("tls-disabled", false, "disable TLS for connection to the server")
@@ -66,5 +66,5 @@ func init() {
 	viper.BindPFlag("client.tls-disabled", clientCmd.Flags().Lookup("tls-disabled"))
 	viper.BindPFlag("client.server-address", clientCmd.Flags().Lookup("server-address"))
 	viper.BindPFlag("client.tcp", clientCmd.Flags().Lookup("tcp"))
-	viper.BindPFlag("client.token", clientCmd.Flags().Lookup("token"))
+	viper.BindPFlag("client.login", clientCmd.Flags().Lookup("login"))
 }
