@@ -16,6 +16,18 @@ service TLS {
   rpc Connection (TLSRequest) returns (TLSResponse) {}
 }
 
+service OAuth2 {
+  rpc Exchange (OAuth2Request) returns (OAuth2Response) {}
+}
+
+message OAuth2Request {
+  string code = 1;
+}
+
+message OAuth2Response {
+  string token = 1;
+}
+
 message TLSRequest {
   bool send = 1;
 }
@@ -26,6 +38,7 @@ message TLSResponse {
   bool authEnabled = 3;
   string authURL = 4;
   string authState = 5;
+  int32 OAuth2ServerPort = 6;
 }
 
 message BackendData {

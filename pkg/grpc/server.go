@@ -63,7 +63,8 @@ func (s *tlsServer) Connection(ctx context.Context, data *pb.TLSRequest) (*pb.TL
 		response.AuthEnabled = viper.GetBool("server.auth-enabled")
 
 		if viper.GetBool("server.auth-enabled") {
-			response.AuthURL = s.oauth2.GetAuthURL()
+			response.AuthURL = s.oauth2.GetAuthURL(streamID)
+			response.OAuth2ServerPort = viper.GetInt32("server.oauth2-port")
 		}
 
 		s.log.Infow("Received data", "data", data, "stream-id", streamID)
@@ -230,6 +231,7 @@ func tlsResponder(server *tlsServer) {
 func RunServer() {
 	log := logger.GetInstance()
 	port := viper.GetInt32("server.port")
+	var serverCreds grpc.ServerOption
 
 	driverInstance := driver.Driver{}
 	driver := driverInstance.New()
@@ -248,6 +250,10 @@ func RunServer() {
 		log: log,
 	}
 
+	oauth2Server := &oauth2Server{
+		log: log,
+	}
+
 	streamInterceptors := []grpc.StreamServerInterceptor{
 		grpc_prometheus.StreamServerInterceptor,
 	}
@@ -255,11 +261,11 @@ func RunServer() {
 		grpc_prometheus.UnaryServerInterceptor,
 	}
 
-	if viper.GetString("server.auth-token") != "" {
+	if viper.GetBool("server.auth-enabled") {
 		streamInterceptors = append(streamInterceptors, streamEnsureValidTokenInterceptor)
 		unaryInterceptors = append(unaryInterceptors, unaryEnsureValidTokenInterceptor)
 
-		log.Debug("Authorization token is set")
+		log.Debug("Authorization is enabled")
 	}
 
 	opts := []grpc.ServerOption{
@@ -284,7 +290,8 @@ func RunServer() {
 		if err != nil {
 			log.Fatalf("Failed to generate credentials %v", err)
 		}
-		opts = append(opts, grpc.Creds(creds))
+		serverCreds = grpc.Creds(creds)
+		opts = append(opts, serverCreds)
 	}
 
 	address := fmt.Sprintf("%s:%d", viper.GetString("server.address"), port)
@@ -293,18 +300,19 @@ func RunServer() {
 		"version", version.VERSION,
 		"address", address)
 
+	go tlsResponder(tlsServer)
+
 	// check if TLS is enabled
 	if !viper.GetBool("server.tls-enabled") && viper.GetBool("server.auth-enabled") {
 		log.Error("Authentication can't be enabled without TLS")
 	} else if viper.GetBool("server.auth-enabled") {
-
-		tlsServer.oauth2 = oauth2.New()
-		go tlsServer.oauth2.ServerCallbackEndpoint()
+		oauth2Provider := oauth2.New()
+		tlsServer.oauth2 = oauth2Provider
+		oauth2Server.oauth2Provider = oauth2Provider
 
 		log.Info("OAuth2 enabled")
+		go oauth2Exchanger(oauth2Server, serverCreds)
 	}
-
-	go tlsResponder(tlsServer)
 
 	// Run prometheus metrics
 	go func() {
