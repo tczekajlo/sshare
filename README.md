@@ -15,6 +15,24 @@ Address: http://ca3150dd-6fca-41e6-8896-8b20a87bd925.my.domain -> https://ca3150
 
 - Kubernetes cluster >= v1.8 with nginx-ingress
 
+## Installation
+
+[Here](https://github.com/tczekajlo/sshare/releases/latest) you can check the latest available version.
+
+### Linux
+
+```
+$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.0.0/sshare_linux_amd64 -o /usr/local/bin/sshare
+$ chmod +x /usr/local/bin/sshare
+```
+
+### macOS
+
+```
+$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.0.0/sshare_darwin_amd64 -o /usr/local/bin/sshare
+$ chmod +x /usr/local/bin/sshare
+```
+
 ## How does is work?
 
 Sshare is using Kubernetes as a backend to create resources that allow exposing your local service.
