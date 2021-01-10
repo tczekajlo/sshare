@@ -4,7 +4,7 @@ sshare is an easy way to expose your local service to the world by using your ow
 
 ```
 $ sshare client 8080 --https-redirect
-sshare 1.0.0 🚀
+sshare 1.1.0 🚀
 
 Address: https://ca3150dd-6fca-41e6-8896-8b20a87bd925.my.domain -> 0.0.0.0:8080
 HTTPs redirect: enabled
@@ -22,14 +22,14 @@ Address: http://ca3150dd-6fca-41e6-8896-8b20a87bd925.my.domain -> https://ca3150
 ### Linux
 
 ```
-$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.0.0/sshare_linux_amd64 -o /usr/local/bin/sshare
+$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.1.0/sshare_linux_amd64 -o /usr/local/bin/sshare
 $ chmod +x /usr/local/bin/sshare
 ```
 
 ### macOS
 
 ```
-$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.0.0/sshare_darwin_amd64 -o /usr/local/bin/sshare
+$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.1.0/sshare_darwin_amd64 -o /usr/local/bin/sshare
 $ chmod +x /usr/local/bin/sshare
 ```
 
@@ -74,7 +74,12 @@ Usage:
 
 Flags:
       --address ip                       address to listen on (default 0.0.0.0)
-      --auth-token string                define authorization token that is required from a client
+      --oauth2-client-id string          the OAuth Client ID
+      --oauth2-client-secret string      the OAuth Client Secret
+      --oauth2-email strings             allow logins for users with a given email, separated by a comma
+      --oauth2-github-user strings       allow logins by username, separated by a comma
+      --oauth2-port int32                port to listen on for OAuth2 (default 50039)
+      --oauth2-provider string           OAuth 2 provider name (available: github) (default "github")
       --backend-domain string            domain name that is used for public access (default "sshare.io")
       --backend-https-enabled            set true if backend supports HTTPs connection
       --backend-ready-timeout duration   time after which the backend is reported as not ready (default 2m0s)
@@ -118,7 +123,7 @@ Flags:
       --server-address string   server address (default "localhost:50041")
       --tcp                     expose TCP port (for a service that does not support HTTP protocol)
       --tls-disabled            disable TLS for connection to the server
-      --token string            authorization token
+      --login                   log in
 
 Global Flags:
       --config string      config file (default is $HOME/.sshare.yaml)
@@ -137,7 +142,7 @@ The example assumes that you have access to a Kubernetes cluster with configured
 
 ```
 $ sshare server
-{"level":"info","ts":1609336286.353205,"caller":"grpc/server.go:243","msg":"sshare gRPC server","version":"1.0.0","address":"0.0.0.0:50041"}
+{"level":"info","ts":1609336286.353205,"caller":"grpc/server.go:243","msg":"sshare gRPC server","version":"1.1.0","address":"0.0.0.0:50041"}
 {"level":"info","ts":1609336286.353504,"caller":"grpc/server.go:212","msg":"TLS is disabled. Skipping TLS Responder"}
 {"level":"info","ts":1609336286.353702,"caller":"grpc/server.go:295","msg":"Running Prometheus metrics","address":":2112","endpoint":"/metrics"}
 ```
@@ -152,7 +157,7 @@ $ docker run --rm -p 8080:80 nginx
 
 ```
 $ sshare client 8080 --tls-disabled
-sshare 1.0.0 🚀
+sshare 1.1.0 🚀
 
 Address: http://74ba1e74-01d4-4b60-be9a-46992e392ee9.sshare.io -> 0.0.0.0:8080
 
@@ -165,7 +170,7 @@ Address: http://74ba1e74-01d4-4b60-be9a-46992e392ee9.sshare.io -> 0.0.0.0:8080
 
 ```
 sshare client 8080 --server-address server.sshare.mydomain.com:50041
-sshare 1.0.0 🚀
+sshare 1.1.0 🚀
 
 Address: https://d22336c3-740a-478d-bdf9-d438d197c957.sshare.mydomain.com -> 0.0.0.0:8080
 Address: http://d22336c3-740a-478d-bdf9-d438d197c957.sshare.mydomain.com -> 0.0.0.0:8080
