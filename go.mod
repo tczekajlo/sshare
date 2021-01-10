@@ -6,6 +6,7 @@ require (
 	github.com/briandowns/spinner v1.12.0
 	github.com/fatih/color v1.10.0
 	github.com/golang/protobuf v1.4.3
+	github.com/google/tcpproxy v0.0.0-20200125044825-b6bb9b5b8252
 	github.com/google/uuid v1.1.3
 	github.com/googleapis/gnostic v0.5.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0

@@ -8,9 +8,8 @@ import (
 
 	pb "sshare/protobuf"
 
-	"sshare/proxy"
-
 	"github.com/briandowns/spinner"
+	"github.com/google/tcpproxy"
 	"github.com/kyokomi/emoji"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
@@ -36,25 +35,12 @@ func (t *Tunnel) ReverseTunnel() error {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	proxy := &proxy.Proxy{
-		Done:       make(chan struct{}),
-		Connection: t.Connection,
-		Log:        t.Log,
-	}
-
 	// Connect to SSH remote server
 	serverConn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.Connection.SSHHost, t.Connection.SSHPort), sshConfig)
 	if err != nil {
 		return fmt.Errorf("Cannot dial into remote server: %s", err)
 	}
 	defer serverConn.Close()
-
-	// Listen on remote server port
-	listener, err := serverConn.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", t.Connection.RemotePort))
-	if err != nil {
-		return fmt.Errorf("Cannot listen on remote server: %s", err)
-	}
-	defer listener.Close()
 
 	ready, err := t.checkIfRemoteServerIsReady()
 	if err != nil {
@@ -63,9 +49,17 @@ func (t *Tunnel) ReverseTunnel() error {
 	}
 
 	if ready {
+		// Tunnel is ready
 		t.WaitSpinner.Stop()
 		close(t.Ready)
-		proxy.Run(listener)
+
+		proxy := tcpproxy.Proxy{
+			ListenFunc: serverConn.Listen,
+		}
+		localService := fmt.Sprintf("0.0.0.0:%d", t.Connection.LocalPort)
+		proxy.AddRoute(fmt.Sprintf("0.0.0.0:%d", t.Connection.RemotePort), tcpproxy.To(localService))
+		proxy.Run()
+
 	}
 
 	return nil
