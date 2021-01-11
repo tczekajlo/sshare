@@ -187,7 +187,7 @@ func (c *Client) IsReady(data *pb.BackendData, opts ...interface{}) (bool, error
 		case <-timeout:
 			metrics.BackendReadyTimeoutTotal.Inc()
 			return false, errors.New("timed out")
-		// Got a tick, we should check on checkSomething()
+		// Got a tick
 		case <-ticker:
 			deploymentIsReady := false
 			serviceIsReady := false

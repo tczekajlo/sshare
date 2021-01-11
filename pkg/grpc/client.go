@@ -192,11 +192,40 @@ func (s *SshareClient) runReceiver() {
 
 func (s *SshareClient) sessionTimeoutClose(sigs chan os.Signal) {
 	if s.sessionTimeout != 0 {
+		timeout := time.After(time.Duration(s.sessionTimeout) * time.Second)
+		ticker := time.Tick(5 * time.Second)
+		now := time.Now()
+		end := now.Add(time.Duration(s.sessionTimeout) * time.Second)
+
 		s.log.Debugw("Session timeout is set", "timeout", s.sessionTimeout)
-		time.Sleep(time.Duration(s.sessionTimeout) * time.Second)
-		fmt.Println(color.YellowString(emoji.Sprintf("Session timed out :clock: The server that you're connected to allows for a session no longer than %v",
-			time.Duration(s.sessionTimeout)*time.Second)))
-		sigs <- syscall.SIGTERM
+
+		s.waitSpinner.UpdateCharSet(spinner.CharSets[21])
+		s.waitSpinner.Start()
+
+		for {
+			select {
+			// Got a timeout!
+			case <-timeout:
+				s.waitSpinner.Stop()
+
+				fmt.Println(color.YellowString(emoji.Sprintf("Session timed out :clock: The server that you're connected to allows for a session no longer than %v",
+					time.Duration(s.sessionTimeout)*time.Second)))
+
+				sigs <- syscall.SIGTERM
+				return
+			// Got a tick
+			case <-ticker:
+				diff := end.Sub(time.Now())
+				timeLeft := time.Time{}.Add(diff).Format("15:04:05")
+				s.spinnerNewMsg(
+					color.YellowString(
+						emoji.Sprintf(" Your session is time-limited by the server that you're connected to: %v left",
+							timeLeft),
+					),
+				)
+			}
+		}
+
 	}
 }
 
@@ -220,6 +249,7 @@ func clean(sshareClient *SshareClient) {
 	cleanSend(client, sshareClient)
 
 	fmt.Println()
+	sshareClient.waitSpinner.Stop()
 	emoji.Println("Bye :wave:")
 	conn.Close()
 	os.Exit(0)
@@ -331,6 +361,7 @@ func (s *SshareClient) printAccessData() {
 			)
 		}
 	}
+	fmt.Println()
 }
 
 // RunClient runs gRPC client and establishes SSH tunnel
