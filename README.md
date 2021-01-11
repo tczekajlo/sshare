@@ -4,7 +4,7 @@ sshare is an easy way to expose your local service to the world by using your ow
 
 ```
 $ sshare client 8080 --https-redirect
-sshare 1.1.0 🚀
+sshare 1.2.0 🚀
 
 Address: https://ca3150dd-6fca-41e6-8896-8b20a87bd925.my.domain -> 0.0.0.0:8080
 HTTPs redirect: enabled
@@ -22,14 +22,14 @@ Address: http://ca3150dd-6fca-41e6-8896-8b20a87bd925.my.domain -> https://ca3150
 ### Linux
 
 ```
-$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.1.0/sshare_linux_amd64 -o /usr/local/bin/sshare
+$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.2.0/sshare_linux_amd64 -o /usr/local/bin/sshare
 $ chmod +x /usr/local/bin/sshare
 ```
 
 ### macOS
 
 ```
-$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.1.0/sshare_darwin_amd64 -o /usr/local/bin/sshare
+$ curl -L https://github.com/tczekajlo/sshare/releases/download/1.2.0/sshare_darwin_amd64 -o /usr/local/bin/sshare
 $ chmod +x /usr/local/bin/sshare
 ```
 
@@ -142,7 +142,7 @@ The example assumes that you have access to a Kubernetes cluster with configured
 
 ```
 $ sshare server
-{"level":"info","ts":1609336286.353205,"caller":"grpc/server.go:243","msg":"sshare gRPC server","version":"1.1.0","address":"0.0.0.0:50041"}
+{"level":"info","ts":1609336286.353205,"caller":"grpc/server.go:243","msg":"sshare gRPC server","version":"1.2.0","address":"0.0.0.0:50041"}
 {"level":"info","ts":1609336286.353504,"caller":"grpc/server.go:212","msg":"TLS is disabled. Skipping TLS Responder"}
 {"level":"info","ts":1609336286.353702,"caller":"grpc/server.go:295","msg":"Running Prometheus metrics","address":":2112","endpoint":"/metrics"}
 ```
@@ -157,7 +157,7 @@ $ docker run --rm -p 8080:80 nginx
 
 ```
 $ sshare client 8080 --tls-disabled
-sshare 1.1.0 🚀
+sshare 1.2.0 🚀
 
 Address: http://74ba1e74-01d4-4b60-be9a-46992e392ee9.sshare.io -> 0.0.0.0:8080
 
@@ -170,7 +170,7 @@ Address: http://74ba1e74-01d4-4b60-be9a-46992e392ee9.sshare.io -> 0.0.0.0:8080
 
 ```
 sshare client 8080 --server-address server.sshare.mydomain.com:50041
-sshare 1.1.0 🚀
+sshare 1.2.0 🚀
 
 Address: https://d22336c3-740a-478d-bdf9-d438d197c957.sshare.mydomain.com -> 0.0.0.0:8080
 Address: http://d22336c3-740a-478d-bdf9-d438d197c957.sshare.mydomain.com -> 0.0.0.0:8080
